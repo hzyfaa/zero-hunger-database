@@ -1,0 +1,285 @@
+Project Zero_Hunger {
+  database_type: 'MySQL'
+}
+
+Table country {
+  country_id integer [pk, not null, increment]
+  name text [not null]
+  iso3_code varchar(3) [not null]
+  indexes {
+    (iso3_code) [unique]
+  }
+}
+
+Table region {
+  region_id integer [pk, not null, increment]
+  name varchar(200) [not null]
+  administrative_level integer [not null]
+  geometry text
+  country_id integer [not null]
+  indexes {
+    (country_id, name, administrative_level) [unique]
+  }
+}
+
+Table data_source {
+  source_id integer [pk, not null, increment]
+  dataset_title text [not null]
+  publisher text [not null]
+  source_url text [not null]
+  release_date date
+  accessed_at timestamp [not null]
+  methodology text [not null]
+}
+
+Table ipc_phase {
+  phase_id integer [pk, not null, increment]
+  phase_number integer [not null]
+  phase_name text [not null]
+  description text [not null]
+  indexes {
+    (phase_number) [unique]
+  }
+  checks {
+    `phase_number BETWEEN 1 AND 5`
+  }
+}
+
+Table organization {
+  organization_id integer [pk, not null, increment]
+  name text [not null]
+  organization_type text [not null]
+  website text
+  contact_email text
+}
+
+Table app_user {
+  user_id integer [pk, not null, increment]
+  name text [not null]
+  email varchar(254) [not null]
+  role text [not null]
+  account_status text [not null]
+  registered_at timestamp [not null]
+  organization_id integer [not null]
+  indexes {
+    (email) [unique]
+  }
+}
+
+Table program {
+  program_id integer [pk, not null, increment]
+  name text [not null]
+  objective text [not null]
+  status text [not null]
+  start_date date [not null]
+  end_date date
+  organization_id integer [not null]
+  checks {
+    `end_date IS NULL OR end_date >= start_date`
+  }
+}
+
+Table commodity {
+  commodity_id integer [pk, not null, increment]
+  name text [not null]
+  category text [not null]
+  grade_or_variety text
+}
+
+Table food_security_assessment {
+  assessment_id integer [pk, not null, increment]
+  assessment_type text [not null]
+  analysis_date date
+  publication_date date
+  period_start date [not null]
+  period_end date [not null]
+  assessed_population integer [not null]
+  population_scope text [not null]
+  updated_at timestamp [not null]
+  region_id integer [not null]
+  source_id integer [not null]
+  checks {
+    `assessed_population > 0`
+    `assessment_type IN ('current', 'projected')`
+    `period_end >= period_start`
+  }
+}
+
+Table assessment_phase_result {
+  result_id integer [pk, not null, increment]
+  affected_population integer [not null]
+  assessment_id integer [not null]
+  phase_id integer [not null]
+  indexes {
+    (assessment_id, phase_id) [unique]
+  }
+  checks {
+    `affected_population >= 0`
+  }
+}
+
+Table economic_indicator {
+  economic_indicator_id integer [pk, not null, increment]
+  indicator_type text [not null]
+  value decimal(18,6) [not null]
+  unit text [not null]
+  measurement_definition text [not null]
+  period_start date [not null]
+  period_end date [not null]
+  published_at timestamp
+  updated_at timestamp [not null]
+  region_id integer [not null]
+  source_id integer [not null]
+  checks {
+    `period_end >= period_start`
+  }
+}
+
+Table climate {
+  climate_id integer [pk, not null, increment]
+  variable text [not null]
+  value decimal(18,6) [not null]
+  unit text [not null]
+  measurement_method text [not null]
+  period_start date [not null]
+  period_end date [not null]
+  published_at timestamp
+  updated_at timestamp [not null]
+  region_id integer [not null]
+  source_id integer [not null]
+  checks {
+    `period_end >= period_start`
+  }
+}
+
+Table nutritional_assessment {
+  nutritional_assessment_id integer [pk, not null, increment]
+  measure_type text [not null]
+  population_group text [not null]
+  threshold_description text [not null]
+  prevalence_pct decimal(5,2) [not null]
+  assessed_population integer
+  affected_population integer
+  period_start date [not null]
+  period_end date [not null]
+  published_at timestamp
+  updated_at timestamp [not null]
+  region_id integer [not null]
+  source_id integer [not null]
+  checks {
+    `prevalence_pct BETWEEN 0 AND 100`
+    `assessed_population IS NULL OR assessed_population >= 0`
+    `affected_population IS NULL OR affected_population >= 0`
+    `period_end >= period_start`
+  }
+}
+
+Table hazard {
+  hazard_id integer [pk, not null, increment]
+  name text [not null]
+  hazard_type text [not null]
+  start_date date [not null]
+  end_date date
+  event_severity text [not null]
+  published_at timestamp
+  updated_at timestamp [not null]
+  source_id integer [not null]
+  checks {
+    `end_date IS NULL OR end_date >= start_date`
+  }
+}
+
+Table price_observation {
+  price_observation_id integer [pk, not null, increment]
+  price decimal(14,4) [not null]
+  currency varchar(3) [not null]
+  quantity decimal(12,4) [not null]
+  quantity_unit text [not null]
+  market_basis text [not null]
+  observed_at timestamp [not null]
+  published_at timestamp
+  updated_at timestamp [not null]
+  region_id integer [not null]
+  commodity_id integer [not null]
+  source_id integer [not null]
+  checks {
+    `price >= 0`
+    `quantity > 0`
+  }
+}
+
+Table distribution_center {
+  distribution_center_id integer [pk, not null, increment]
+  name text [not null]
+  center_type text [not null]
+  address text
+  latitude decimal(9,6)
+  longitude decimal(9,6)
+  operating_status text [not null]
+  contact_email text
+  organization_id integer [not null]
+  region_id integer [not null]
+  checks {
+    `latitude IS NULL OR latitude BETWEEN -90 AND 90`
+    `longitude IS NULL OR longitude BETWEEN -180 AND 180`
+  }
+}
+
+Table contribution_opportunity {
+  opportunity_id integer [pk, not null, increment]
+  opportunity_type text [not null]
+  description text [not null]
+  support_requested text [not null]
+  action_url text [not null]
+  contact_email text
+  status text [not null]
+  opens_at timestamp [not null]
+  closes_at timestamp
+  program_id integer [not null]
+  published_by_user_id integer [not null]
+  checks {
+    `closes_at IS NULL OR closes_at >= opens_at`
+  }
+}
+
+Table program_region {
+  program_id integer [not null]
+  region_id integer [not null]
+  indexes {
+    (program_id, region_id) [pk]
+  }
+}
+
+Table hazard_region {
+  hazard_id integer [not null]
+  region_id integer [not null]
+  indexes {
+    (hazard_id, region_id) [pk]
+  }
+}
+
+Ref R01: region.country_id > country.country_id [delete: restrict]
+Ref R02: food_security_assessment.region_id > region.region_id [delete: restrict]
+Ref R03: assessment_phase_result.assessment_id > food_security_assessment.assessment_id [delete: restrict]
+Ref R04: assessment_phase_result.phase_id > ipc_phase.phase_id [delete: restrict]
+Ref R05: economic_indicator.region_id > region.region_id [delete: restrict]
+Ref R06: climate.region_id > region.region_id [delete: restrict]
+Ref R07: nutritional_assessment.region_id > region.region_id [delete: restrict]
+Ref R08a: hazard_region.hazard_id > hazard.hazard_id [delete: restrict]
+Ref R08b: hazard_region.region_id > region.region_id [delete: restrict]
+Ref R09: price_observation.region_id > region.region_id [delete: restrict]
+Ref R10: price_observation.commodity_id > commodity.commodity_id [delete: restrict]
+Ref R11: program.organization_id > organization.organization_id [delete: restrict]
+Ref R12a: program_region.program_id > program.program_id [delete: restrict]
+Ref R12b: program_region.region_id > region.region_id [delete: restrict]
+Ref R13: distribution_center.organization_id > organization.organization_id [delete: restrict]
+Ref R14: distribution_center.region_id > region.region_id [delete: restrict]
+Ref R15: contribution_opportunity.program_id > program.program_id [delete: restrict]
+Ref R16: app_user.organization_id > organization.organization_id [delete: restrict]
+Ref R17: contribution_opportunity.published_by_user_id > app_user.user_id [delete: restrict]
+Ref R18: food_security_assessment.source_id > data_source.source_id [delete: restrict]
+Ref R19: economic_indicator.source_id > data_source.source_id [delete: restrict]
+Ref R20: climate.source_id > data_source.source_id [delete: restrict]
+Ref R21: nutritional_assessment.source_id > data_source.source_id [delete: restrict]
+Ref R22: hazard.source_id > data_source.source_id [delete: restrict]
+Ref R23: price_observation.source_id > data_source.source_id [delete: restrict]
