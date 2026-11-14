@@ -1,0 +1,2 @@
+CREATE DATABASE IF NOT EXISTS zero_hunger
+    CHARACTER SET utf8mb4;
