@@ -84,8 +84,11 @@ The 17 conceptual entities each map to one table. Two association tables resolve
 
 **Status:** A complete dependency review and team approval has not yet been recorded.
 
+
 | Form | Design rationale |
 |---|---|
-| 1NF | | 
-| 2NF | |
-| 3NF | |
+| 1NF |	All 19 tables enforce atomic column domains with no repeating groups or multi-valued attributes. Multi-phase IPC results are decomposed into rows in assessment_phase_result rather than repeating columns on food_security_assessment. Many-to-many relationships between regions and programs (R12) and regions and hazards (R08) are resolved into atomic junction tables (program_region, hazard_region). Composite measurements (price, currency, quantity, unit, start/end dates, latitude/longitude) are separated into distinct atomic attributes. |
+| 2NF |	All 17 entity tables use single-column surrogate integer primary keys, eliminating the possibility of partial key dependencies on the primary key. In relations with composite candidate keys-region (country_id, name, administrative_level) and assessment_phase_result (assessment_id, phase_id), all non-prime attributes depend on the full composite key. Both associative tables (program_region, hazard_region) are all-key relations with no non-prime attributes.|
+| 3NF |	Transitive dependencies are eliminated by isolating lookup and parent entities into dedicated tables, country (isolating name and iso3_code from region), ipc_phase (isolating phase_name and description from assessment_phase_result), organization (isolating org metadata from app_user, program, and distribution_center), commodity (isolating product metadata from price_observation), and data_source (isolating dataset provenance from R18-R23 records). Derived percentages in assessment_phase_result are computed dynamically rather than stored, preventing update anomalies.|
+|BCNF & 4NF | Every determinant across all candidate keys (iso3_code, phase_number, app_user.email, region composite key, assessment_phase_result composite key) is a superkey, satisfying BCNF. Independent multi-valued facts about regions (programs served vs. hazards experienced) are separated into independent junction tables (program_region and hazard_region), satisfying 4NF.
+
